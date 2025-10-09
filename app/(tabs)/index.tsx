@@ -1,30 +1,30 @@
 import { Image } from 'expo-image';
-import { Button, FlatList, Platform, StyleSheet, TextInput } from 'react-native';
+import { Button, Platform, StyleSheet, TextInput } from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
 import { useState } from 'react';
 import IOSButton from '@/components/ios-button';
 import { EvilIcons } from '@expo/vector-icons';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
+import { addTodo } from '@/store/features/todos/todosSlice';
 
 const generateId = () => `${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
 export default function HomeScreen() {
-
   const [inputValue, setInputValue] = useState("")
-  const [todos, setTodos] = useState<{
-    id: string,
-    title: string
-  }[]>([])
+
+  const todos = useSelector((state: RootState) => state.todos.todos)
+  const dispatch = useDispatch()
 
   const handleAddTodo = () => {
-    setTodos(prev => [{
+    dispatch(addTodo({
       id: generateId(),
-      title: inputValue,
-    }, ...prev])
+      title: inputValue
+    }))
+
     setInputValue("")
   }
 
@@ -42,7 +42,6 @@ export default function HomeScreen() {
       }>
       <ThemedView style={styles.titleContainer}>
         <TextInput style={styles.input} value={inputValue} onChangeText={v => {
-          console.log(v)
           setInputValue(v)
         }} />
       </ThemedView>
@@ -56,23 +55,9 @@ export default function HomeScreen() {
         }
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
-        <FlatList
-          style={styles.listContainer}
-          data={todos}
-          renderItem={({ item }) => <Item title={item.title} />}
-          keyExtractor={item => item.id}
-        />
+        {todos.map(todo => <Item key={todo.id} title={todo.title} />)}
       </ThemedView>
-      {/* <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView> */}
+
     </ParallaxScrollView>
   );
 }
@@ -81,9 +66,10 @@ const Item = ({ title }: {
   title: string
 }) => (
   <ThemedView style={styles.item}>
-
     <ThemedText style={styles.itemTitle}>{title}</ThemedText>
-    <EvilIcons name='close' size={32} />
+    <ThemedText>
+      <EvilIcons name='close' size={32} />
+    </ThemedText>
   </ThemedView>
 );
 
@@ -112,13 +98,13 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 60,
+    width: '100%',
     marginVertical: 12,
     paddingHorizontal: 10,
     fontFamily: "JosefinSans_400Regular",
     fontSize: 20,
     backgroundColor: "#fff",
     borderRadius: 5,
-
   },
   item: {
     padding: 20,
@@ -133,7 +119,6 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 24,
     fontFamily: "JosefinSans_400Regular",
-
   },
   backgroundImage: {
     ...StyleSheet.absoluteFillObject,
